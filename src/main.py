@@ -53,8 +53,11 @@ def main():
     logger = DataLogger()
     logger.start(reader)
 
+    from tuning import ECUTuner
+    tuner = ECUTuner(reader)
+
     from webui import WebUI
-    webui = WebUI(dash, reader, logger=logger)
+    webui = WebUI(dash, reader, logger=logger, tuner=tuner)
     webui.start()
     clock = pygame.time.Clock()
     running = True
