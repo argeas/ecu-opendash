@@ -48,6 +48,10 @@ def main():
     reader.start()
 
     dash = Dashboard(screen)
+
+    from webui import WebUI
+    webui = WebUI(dash, reader)
+    webui.start()
     clock = pygame.time.Clock()
     running = True
 
@@ -74,6 +78,7 @@ def main():
         clock.tick(FPS)
 
     reader.stop()
+    webui.stop()
     if fb_out:
         fb_out.close()
     pygame.quit()
