@@ -51,9 +51,25 @@ RT_MAP = {
 
 STOICH_AFR = 14.7
 
-# Gauge warning thresholds
-WARN_CLT_HIGH = 100
+# Gauge ranges and warning thresholds (from TSDash Speeduino definitions)
+GAUGE_DEFS = {
+    "rpm":      {"min": 0, "max": 8000, "warn_high": 6000, "crit_high": 7000, "unit": "rpm"},
+    "afr":      {"min": 10, "max": 20, "warn_low": 13.0, "warn_high": 16.0, "crit_high": 17.0, "unit": ""},
+    "clt":      {"min": -40, "max": 130, "warn_high": 93, "crit_high": 104, "unit": "°C"},
+    "iat":      {"min": -40, "max": 100, "warn_high": 50, "crit_high": 60, "unit": "°C"},
+    "tps":      {"min": 0, "max": 100, "warn_high": 90, "unit": "%"},
+    "map":      {"min": 0, "max": 255, "warn_high": 200, "crit_high": 245, "unit": "kPa"},
+    "advance":  {"min": -10, "max": 50, "warn_high": 35, "crit_high": 45, "unit": "°"},
+    "pw1":      {"min": 0, "max": 35, "warn_high": 20, "crit_high": 25, "unit": "ms"},
+    "batteryv": {"min": 8, "max": 16, "warn_low": 12.0, "unit": "V"},
+    "boost":    {"min": 0, "max": 200, "warn_high": 150, "crit_high": 180, "unit": "kPa"},
+    "oilpressure": {"min": 0, "max": 100, "warn_low": 25, "unit": "psi"},
+    "ve":       {"min": 0, "max": 150, "unit": "%"},
+    "dutycycle": {"min": 0, "max": 100, "warn_high": 70, "crit_high": 80, "unit": "%"},
+}
+
+WARN_CLT_HIGH = 93
 WARN_OIL_LOW = 25
 WARN_BATTERY_LOW = 12.0
 WARN_AFR_LEAN = 16.0
-WARN_AFR_RICH = 11.0
+WARN_AFR_RICH = 13.0

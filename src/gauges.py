@@ -119,7 +119,7 @@ class VerticalGauge:
 class RPMBar:
     """Wide horizontal RPM bar across the top."""
 
-    def __init__(self, x, y, w, h, max_rpm=7000, warn_rpm=6000):
+    def __init__(self, x, y, w, h, max_rpm=8000, warn_rpm=6000):
         self.x = x
         self.y = y
         self.w = w
@@ -222,8 +222,10 @@ class WarningBar:
     def draw(self, surface, data):
         items = []
         clt = data.get("clt", 0)
-        if clt > 100:
+        if clt > 104:
             items.append(("OVERHEAT", RED))
+        elif clt > 93:
+            items.append(("HOT", YELLOW))
         oil = data.get("oilpressure", 50)
         rpm = data.get("rpm", 0)
         if oil < 25 and rpm > 500:
@@ -232,9 +234,11 @@ class WarningBar:
         if batt < 12.0:
             items.append(("BATT", ORANGE))
         afr = data.get("afr", 14.7)
-        if afr > 16.0:
+        if afr > 17.0:
             items.append(("LEAN", RED))
-        elif afr < 11.0:
+        elif afr > 16.0:
+            items.append(("LEAN", YELLOW))
+        elif afr < 13.0:
             items.append(("RICH", YELLOW))
 
         if not items:

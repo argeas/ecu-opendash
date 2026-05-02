@@ -26,7 +26,7 @@ class MainPage(Page):
     def __init__(self, screen):
         super().__init__(screen, "MAIN")
 
-        self.rpm = RPMBar(x=0, y=0, w=self.w, h=42, max_rpm=7000, warn_rpm=6000)
+        self.rpm = RPMBar(x=0, y=0, w=self.w, h=42, max_rpm=8000, warn_rpm=6000)
 
         gauge_y = 46
         gauge_h = 195
@@ -34,24 +34,24 @@ class MainPage(Page):
 
         self.boost = VerticalGauge(
             col_w * 0, gauge_y, col_w, gauge_h,
-            0, 150, "BOOST", "kPa",
-            warn_high=130, show_scale=True, scale_count=4,
+            0, 200, "BOOST", "kPa",
+            warn_high=150, show_scale=True, scale_count=5,
         )
         self.map_g = VerticalGauge(
             col_w * 1, gauge_y, col_w, gauge_h,
-            0, 250, "MAP", "kPa",
-            show_scale=True, scale_count=4,
+            0, 255, "MAP", "kPa",
+            warn_high=200, show_scale=True, scale_count=4,
         )
         self.afr = VerticalGauge(
             col_w * 2, gauge_y, col_w, gauge_h,
-            10, 18, "AFR", "",
-            warn_high=16, warn_low=11, fmt="{:.1f}",
+            10, 20, "AFR", "",
+            warn_high=16, warn_low=13, fmt="{:.1f}",
             show_scale=True, scale_count=5,
         )
         self.clt = VerticalGauge(
             col_w * 3, gauge_y, col_w, gauge_h,
-            0, 130, "CLT", "°C",
-            warn_high=100, show_scale=True, scale_count=4,
+            -40, 130, "CLT", "°C",
+            warn_high=93, show_scale=True, scale_count=4,
         )
         self.oil = VerticalGauge(
             col_w * 4, gauge_y, col_w, gauge_h,
@@ -60,14 +60,14 @@ class MainPage(Page):
         )
         self.batt = VerticalGauge(
             col_w * 5, gauge_y, col_w, gauge_h,
-            10, 16, "BATT", "V",
+            8, 16, "BATT", "V",
             warn_low=12, fmt="{:.1f}",
             show_scale=True, scale_count=4,
         )
         self.tps = VerticalGauge(
             col_w * 6, gauge_y, col_w, gauge_h,
             0, 100, "TPS", "%",
-            show_scale=True, scale_count=3,
+            warn_high=90, show_scale=True, scale_count=3,
         )
 
         gear_w = col_w
