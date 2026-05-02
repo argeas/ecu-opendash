@@ -5,15 +5,16 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 
 
 class WebUI:
-    def __init__(self, dashboard, reader, host="0.0.0.0", port=8080):
+    def __init__(self, dashboard, reader, logger=None, host="0.0.0.0", port=8080):
         self.dashboard = dashboard
         self.reader = reader
+        self.logger = logger
         self.host = host
         self.port = port
         self._server = None
         self._thread = None
 
-        handler = _make_handler(dashboard, reader)
+        handler = _make_handler(dashboard, reader, logger)
         self._server = HTTPServer((host, port), handler)
 
     def start(self):
@@ -26,7 +27,7 @@ class WebUI:
             self._server.shutdown()
 
 
-def _make_handler(dashboard, reader):
+def _make_handler(dashboard, reader, logger):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, format, *args):
             pass
@@ -44,6 +45,10 @@ def _make_handler(dashboard, reader):
             elif self.path == "/api/prev-page":
                 dashboard.current_page = (dashboard.current_page - 1) % len(dashboard.pages)
                 self._json_response({"page": dashboard.current_page})
+            elif self.path == "/api/logs":
+                self._serve_logs()
+            elif self.path.startswith("/api/logs/"):
+                self._serve_log_file(self.path.split("/api/logs/")[1])
             else:
                 self.send_error(404)
 
@@ -61,10 +66,34 @@ def _make_handler(dashboard, reader):
         def _serve_status(self):
             self._json_response({
                 "connected": getattr(reader, "connected", False),
+                "connection_type": getattr(reader, "connection_type", None),
                 "page": dashboard.current_page,
                 "page_name": dashboard.pages[dashboard.current_page].name,
                 "total_pages": len(dashboard.pages),
+                "logging": logger.current_file if logger else None,
             })
+
+        def _serve_logs(self):
+            if logger:
+                self._json_response({"logs": logger.list_logs()})
+            else:
+                self._json_response({"logs": []})
+
+        def _serve_log_file(self, filename):
+            import os
+            if not logger:
+                self.send_error(404)
+                return
+            filepath = os.path.join(logger.log_dir, filename)
+            if not os.path.exists(filepath) or ".." in filename:
+                self.send_error(404)
+                return
+            self.send_response(200)
+            self.send_header("Content-Type", "text/csv")
+            self.send_header("Content-Disposition", f"attachment; filename={filename}")
+            self.end_headers()
+            with open(filepath, "rb") as f:
+                self.wfile.write(f.read())
 
         def _serve_html(self):
             html = """<!DOCTYPE html>
@@ -146,9 +175,17 @@ function api(endpoint) {
 function poll() {
   fetch('/api/data').then(r=>r.json()).then(data=>{
     update(data);
+  }).catch(()=>{});
+  fetch('/api/status').then(r=>r.json()).then(st=>{
     const s = el('status');
-    if(Object.keys(data).length > 0) { s.textContent='Connected'; s.className='status connected'; }
-    else { s.textContent='No ECU data'; s.className='status disconnected'; }
+    if(st.connected) {
+      const t = st.connection_type ? st.connection_type.toUpperCase() : '';
+      s.textContent='Connected via '+t+' | Page '+(st.page+1)+'/'+st.total_pages;
+      s.className='status connected';
+    } else {
+      s.textContent='Searching for ECU...';
+      s.className='status disconnected';
+    }
   }).catch(()=>{
     el('status').textContent='Dashboard offline';
     el('status').className='status disconnected';

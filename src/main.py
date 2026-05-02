@@ -49,8 +49,12 @@ def main():
 
     dash = Dashboard(screen)
 
+    from datalog import DataLogger
+    logger = DataLogger()
+    logger.start(reader)
+
     from webui import WebUI
-    webui = WebUI(dash, reader)
+    webui = WebUI(dash, reader, logger=logger)
     webui.start()
     clock = pygame.time.Clock()
     running = True
@@ -78,6 +82,7 @@ def main():
         clock.tick(FPS)
 
     reader.stop()
+    logger.stop()
     webui.stop()
     if fb_out:
         fb_out.close()

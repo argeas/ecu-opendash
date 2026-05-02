@@ -216,18 +216,20 @@ class WiFiReader:
 
 
 class AutoReader:
-    """Auto-detect ECU connection: tries WiFi first, falls back to USB.
+    """Auto-detect ECU connection: tries WiFi, BLE, then USB.
 
-    Searches for:
+    Search order:
       1. WiFi TCP on speeduino.local:2000 (Airbear on same network)
       2. WiFi TCP on 192.168.4.1:2000 (Airbear AP mode)
-      3. USB serial on /dev/ttyACM0, /dev/ttyACM1, /dev/ttyUSB0
+      3. Bluetooth LE (Airbear BLE, device name 'Speeduino')
+      4. USB serial on /dev/ttyACM0, /dev/ttyACM1, /dev/ttyUSB0
     """
 
     def __init__(self):
         self.reader = None
         self.data = {}
         self.connected = False
+        self.connection_type = None
         self._lock = threading.Lock()
         self._running = False
         self._thread = None
@@ -246,6 +248,19 @@ class AutoReader:
         import os
         return os.path.exists(port)
 
+    def _try_ble(self):
+        try:
+            from ble_reader import BLEReader, HAS_BLEAK
+            if not HAS_BLEAK:
+                return None
+            reader = BLEReader()
+            reader.connect()
+            if reader.connected:
+                return reader
+        except Exception as e:
+            print(f"BLE probe failed: {e}")
+        return None
+
     def _find_connection(self):
         wifi_hosts = [
             AIRBEAR_DEFAULT_HOST,
@@ -257,8 +272,16 @@ class AutoReader:
                 reader = WiFiReader(host=host)
                 if reader.connect():
                     print(f"Connected via WiFi: {host}")
+                    self.connection_type = "wifi"
                     return reader
                 reader.stop()
+
+        print("Trying Bluetooth LE...")
+        ble_reader = self._try_ble()
+        if ble_reader:
+            print("Connected via Bluetooth LE")
+            self.connection_type = "ble"
+            return ble_reader
 
         serial_ports = ["/dev/ttyACM0", "/dev/ttyACM1", "/dev/ttyUSB0"]
         for port in serial_ports:
@@ -267,6 +290,7 @@ class AutoReader:
                 reader = SpeeduinoReader(port=port)
                 if reader.connect():
                     print(f"Connected via USB: {port}")
+                    self.connection_type = "usb"
                     return reader
 
         return None
@@ -276,8 +300,9 @@ class AutoReader:
         if self.reader:
             self.connected = True
             return True
-        print("No ECU found on WiFi or USB")
+        print("No ECU found on WiFi, BLE, or USB")
         self.connected = False
+        self.connection_type = None
         return False
 
     def get_data(self):
@@ -301,6 +326,7 @@ class AutoReader:
                 self.reader.read_realtime()
                 if not self.reader.connected:
                     self.connected = False
+                    self.connection_type = None
                     self.reader = None
             time.sleep(0.03)
 
