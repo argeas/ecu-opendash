@@ -6,6 +6,11 @@ SERIAL_PORT = "/dev/ttyACM0"
 SERIAL_BAUD = 115200
 SERIAL_TIMEOUT = 0.1
 
+# Airbear WiFi connection (Dropbear V2)
+WIFI_HOST = "speeduino.local"
+WIFI_PORT = 2000
+WIFI_AP_HOST = "192.168.4.1"
+
 # Speeduino 'A' command real-time data byte offsets (firmware 202402+)
 # Reference: https://wiki.speeduino.com/en/reference/Interface_Protocol
 RT_MAP = {

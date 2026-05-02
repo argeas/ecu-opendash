@@ -10,19 +10,31 @@ from dashboard import Dashboard
 
 def main():
     demo = "--demo" in sys.argv
+    use_fbdev = "--fbdev" in sys.argv
 
-    if not demo:
-        os.environ.setdefault("SDL_VIDEODRIVER", "fbcon")
+    fb_out = None
 
-    pygame.init()
-
-    if "--fullscreen" in sys.argv or not demo:
-        screen = pygame.display.set_mode(
-            (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.NOFRAME
-        )
-        pygame.mouse.set_visible(False)
+    if use_fbdev:
+        os.environ["SDL_VIDEODRIVER"] = "dummy"
+        pygame.init()
+        screen = pygame.Surface((SCREEN_WIDTH, SCREEN_HEIGHT))
+        try:
+            from fbdev import FramebufferOutput
+            fb_out = FramebufferOutput("/dev/fb0")
+            print(f"Using direct framebuffer output: {SCREEN_WIDTH}x{SCREEN_HEIGHT}")
+        except Exception as e:
+            print(f"Framebuffer failed: {e}, falling back to SDL")
+            fb_out = None
+            screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     else:
-        screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+        pygame.init()
+        if "--fullscreen" in sys.argv:
+            screen = pygame.display.set_mode(
+                (SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN | pygame.NOFRAME
+            )
+            pygame.mouse.set_visible(False)
+        else:
+            screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 
     pygame.display.set_caption("OpenDash")
 
@@ -30,8 +42,8 @@ def main():
         from speeduino import DemoReader
         reader = DemoReader()
     else:
-        from speeduino import SpeeduinoReader
-        reader = SpeeduinoReader()
+        from speeduino import AutoReader
+        reader = AutoReader()
 
     reader.start()
 
@@ -48,15 +60,22 @@ def main():
                     running = False
                 elif event.key in (pygame.K_SPACE, pygame.K_RIGHT):
                     dash.next_page()
-            else:
-                dash.handle_event(event)
+            elif event.type in (pygame.MOUSEBUTTONDOWN, pygame.FINGERDOWN):
+                dash.next_page()
 
         data = reader.get_data()
         dash.render(data)
-        pygame.display.flip()
+
+        if fb_out:
+            fb_out.write_surface(screen)
+        else:
+            pygame.display.flip()
+
         clock.tick(FPS)
 
     reader.stop()
+    if fb_out:
+        fb_out.close()
     pygame.quit()
 
 
