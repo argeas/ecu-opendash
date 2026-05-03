@@ -276,8 +276,9 @@ class AutoReader:
                     return reader
                 reader.stop()
 
-        print("Trying Bluetooth LE...")
-        ble_reader = self._try_ble()
+        # BLE disabled — asyncio event loop conflicts with main thread.
+        # TODO: fix BLE to run in isolated process
+        ble_reader = None
         if ble_reader:
             print("Connected via Bluetooth LE")
             self.connection_type = "ble"
