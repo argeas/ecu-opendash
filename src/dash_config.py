@@ -8,7 +8,11 @@ DEFAULT_CONFIG = {
     "pages": [
         {
             "name": "FOCUS",
-            "type": "big_values",
+            "layout": "grid",
+            "columns": 2,
+            "rows": 2,
+            "padding": 3,
+            "font_size": None,
             "rpm_bar": False,
             "gauges": [
                 {"key": "boost", "label": "BOOST", "unit": "kPa", "min": 0, "max": 200, "warn_high": 150, "fmt": "{:.0f}"},

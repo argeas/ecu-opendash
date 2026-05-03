@@ -46,6 +46,7 @@ def _make_handler(dashboard, reader, logger, tuner):
                 "/api/logs": self._api_logs,
                 "/api/config": lambda: self._json(load_config()),
                 "/api/channels": lambda: self._json(AVAILABLE_CHANNELS),
+                "/api/reload": self._api_reload,
                 "/api/tuning/params": self._api_tuning_params,
             }
             if self.path in routes:
@@ -133,6 +134,10 @@ def _make_handler(dashboard, reader, logger, tuner):
             self.end_headers()
             with open(filepath, "rb") as f:
                 self.wfile.write(f.read())
+
+        def _api_reload(self):
+            dashboard.reload_config()
+            self._json({"ok": True, "msg": "Dashboard reloaded", "pages": len(dashboard.pages)})
 
         def _api_tuning_params(self):
             if tuner:
@@ -257,6 +262,9 @@ function render(){{
   config.pages.forEach((p,pi)=>{{
     h+=`<div class="card"><h3>Page ${{pi+1}}: ${{p.name}} <button onclick="removePage(${{pi}})" class="btn-danger" style="float:right;padding:2px 8px;font-size:10px">Delete</button></h3>`;
     h+=`<div class="form-row"><label>Name</label><input value="${{p.name}}" onchange="config.pages[${{pi}}].name=this.value"></div>`;
+    h+=`<div class="form-row"><label>Layout</label><select onchange="config.pages[${{pi}}].layout=this.value"><option value="grid" ${{(p.layout||'')=='grid'?'selected':''}}>Grid (large values)</option><option value="vertical_bars" ${{(p.layout||'')==='vertical_bars'?'selected':''}}>Vertical Bars</option></select></div>`;
+    h+=`<div class="form-row"><label>Columns</label><input type="number" min="1" max="4" value="${{p.columns||2}}" onchange="config.pages[${{pi}}].columns=+this.value" style="width:50px"><label>Rows</label><input type="number" min="1" max="4" value="${{p.rows||2}}" onchange="config.pages[${{pi}}].rows=+this.value" style="width:50px"></div>`;
+    h+=`<div class="form-row"><label>Font Size</label><input type="number" min="10" max="80" value="${{p.font_size||''}}" placeholder="auto" onchange="config.pages[${{pi}}].font_size=+this.value||null" style="width:60px"><label>Padding</label><input type="number" min="0" max="20" value="${{p.padding||3}}" onchange="config.pages[${{pi}}].padding=+this.value" style="width:50px"></div>`;
     h+=`<div class="form-row"><label>RPM Bar</label><select onchange="config.pages[${{pi}}].rpm_bar=this.value==='true'"><option value="true" ${{p.rpm_bar?'selected':''}}>Yes</option><option value="false" ${{!p.rpm_bar?'selected':''}}>No</option></select></div>`;
     h+=`<div class="form-row"><label>Gear</label><select onchange="config.pages[${{pi}}].gear=this.value==='true'"><option value="true" ${{p.gear?'selected':''}}>Yes</option><option value="false" ${{!p.gear?'selected':''}}>No</option></select></div>`;
     h+=`<h3 style="margin-top:8px">Gauges</h3>`;
@@ -279,7 +287,13 @@ function removeGauge(pi,gi){{config.pages[pi].gauges.splice(gi,1);render();}}
 async function saveConfig(){{
   const r=await fetch('/api/config',{{method:'POST',headers:{{'Content-Type':'application/json'}},body:JSON.stringify(config)}});
   const d=await r.json();
-  document.getElementById('msg').innerHTML=`<div class="msg ${{d.ok?'msg-ok':'msg-err'}}">${{d.msg}}</div>`;
+  if(d.ok){{
+    const r2=await fetch('/api/reload');
+    const d2=await r2.json();
+    document.getElementById('msg').innerHTML=`<div class="msg msg-ok">Saved & reloaded (${{d2.pages}} pages)</div>`;
+  }}else{{
+    document.getElementById('msg').innerHTML=`<div class="msg msg-err">${{d.msg}}</div>`;
+  }}
   setTimeout(()=>document.getElementById('msg').innerHTML='',3000);
 }}
 init();
