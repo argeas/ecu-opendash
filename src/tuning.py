@@ -139,34 +139,10 @@ class ECUTuner:
         return value * param["scale"]
 
     def write_param(self, param_id, value):
-        param = next((p for p in TUNING_PARAMS if p["id"] == param_id), None)
-        if not param:
-            return False, "Unknown parameter"
-
-        if value < param["min"] or value > param["max"]:
-            return False, f"Value out of range [{param['min']}, {param['max']}]"
-
-        raw_value = int(value / param["scale"])
-        page = param["page"]
-        offset = param["offset"]
-        size = param["size"]
-
-        if size == 1:
-            data = struct.pack("B", raw_value & 0xFF)
-        elif size == 2:
-            data = struct.pack("<H", raw_value & 0xFFFF)
-        else:
-            return False, "Unsupported size"
-
-        cmd = struct.pack("BBH", ord("w"), page, offset) + data
-        self._send_receive(cmd, 1)
-
-        self._cache[param_id] = value
-        return True, "Written"
+        return False, "Write disabled — use TunerStudio for ECU tuning"
 
     def burn_to_flash(self):
-        self._send_receive(b"B", 1)
-        return True
+        return False
 
     def get_all_params(self):
         result = []

@@ -295,12 +295,9 @@ HTML_TUNING = f"""<!DOCTYPE html><html><head>
 <h1>ECU Tuning</h1>
 <div class="nav"><a href="/">Live</a><a href="/editor">Editor</a><a href="/tuning" class="active">Tuning</a></div>
 <div id="status" class="status disconnected">Checking ECU...</div>
-<div class="msg msg-err" style="margin-bottom:8px">&#9888; Writing incorrect values can damage your engine. Use with caution.</div>
+<div class="msg" style="margin-bottom:8px;background:#12121a;border:1px solid #444;color:#888">Read-only — use TunerStudio for ECU tuning. Values shown when ECU is connected.</div>
 <div id="msg"></div>
 <div id="params"></div>
-<div class="buttons" style="margin-top:12px">
-  <button onclick="burnFlash()" class="btn-danger" style="flex:1">Burn to Flash</button>
-</div>
 <script>
 let params=[];
 async function init(){{
@@ -318,9 +315,7 @@ function render(){{
     h+=`<h3>${{p.name}} <span style="color:#444;font-weight:normal">${{p.unit}}</span></h3>`;
     h+=`<div class="desc">${{p.description}}</div>`;
     h+=`<div class="param-val" id="val-${{p.id}}">${{p.value!==null&&p.value!==undefined?p.value:'--'}}</div>`;
-    h+=`<input type="range" class="slider" min="${{p.min}}" max="${{p.max}}" step="${{p.step}}" value="${{p.value||p.min}}" id="sl-${{p.id}}" oninput="document.getElementById('val-${{p.id}}').textContent=this.value">`;
-    h+=`<div class="form-row" style="margin-top:6px"><span style="font-size:10px;color:#444">${{p.min}}</span><span style="flex:1"></span><span style="font-size:10px;color:#444">${{p.max}}</span></div>`;
-    h+=`<button onclick="writeParam('${{p.id}}')" style="margin-top:4px;padding:4px 10px;font-size:11px;width:100%">Write to ECU</button>`;
+    h+=`<div class="form-row" style="margin-top:4px"><span style="font-size:10px;color:#444">Range: ${{p.min}} — ${{p.max}} ${{p.unit}}</span></div>`;
     h+=`</div>`;
   }});
   document.getElementById('params').innerHTML=h;
