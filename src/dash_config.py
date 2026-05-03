@@ -7,7 +7,21 @@ CONFIG_PATH = os.environ.get("OPENDASH_CONFIG", "/opt/opendash/dashboard.json")
 DEFAULT_CONFIG = {
     "pages": [
         {
+            "name": "FOCUS",
+            "type": "big_values",
+            "rpm_bar": False,
+            "gauges": [
+                {"key": "boost", "label": "BOOST", "unit": "kPa", "min": 0, "max": 200, "warn_high": 150, "fmt": "{:.0f}"},
+                {"key": "clt", "label": "COOLANT", "unit": "°C", "min": -40, "max": 130, "warn_high": 93, "fmt": "{:.0f}"},
+                {"key": "iat", "label": "AIR INTAKE", "unit": "°C", "min": -20, "max": 60, "warn_high": 50, "fmt": "{:.0f}"},
+            ],
+            "gear": False,
+            "ve_gauge": False,
+            "bottom_bars": [],
+        },
+        {
             "name": "MAIN",
+            "type": "vertical_bars",
             "rpm_bar": True,
             "gauges": [
                 {"key": "boost", "label": "BST", "unit": "kPa", "min": 0, "max": 200, "warn_high": 150, "fmt": "{:.0f}"},
@@ -28,6 +42,7 @@ DEFAULT_CONFIG = {
         },
         {
             "name": "TEMPS",
+            "type": "vertical_bars",
             "rpm_bar": False,
             "gauges": [
                 {"key": "clt", "label": "CLT", "unit": "°C", "min": -40, "max": 130, "warn_high": 93, "fmt": "{:.0f}"},
