@@ -13,6 +13,7 @@ DEFAULT_CONFIG = {
             "gauges": [
                 {"key": "boost", "label": "BOOST", "unit": "kPa", "min": 0, "max": 200, "warn_high": 150, "fmt": "{:.0f}"},
                 {"key": "clt", "label": "COOLANT", "unit": "°C", "min": -40, "max": 130, "warn_high": 93, "fmt": "{:.0f}"},
+                {"key": "oiltemp", "label": "OIL TEMP", "unit": "°C", "min": 0, "max": 150, "warn_high": 120, "fmt": "{:.0f}"},
                 {"key": "iat", "label": "AIR INTAKE", "unit": "°C", "min": -20, "max": 60, "warn_high": 50, "fmt": "{:.0f}"},
             ],
             "gear": False,

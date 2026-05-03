@@ -226,26 +226,32 @@ class BigValueDisplay:
 
 
 class BoostTempsPage(Page):
-    """Page 3: Boost, Coolant Temp, IAT — large readable values."""
+    """Page 1: Boost, Coolant, Oil Temp, IAT — 4 large squares."""
 
     def __init__(self, screen):
         super().__init__(screen, "FOCUS")
 
-        pad = 4
-        row_h = (self.h - pad * 4) // 3
+        pad = 3
+        half_w = (self.w - pad * 3) // 2
+        half_h = (self.h - pad * 3) // 2
 
         self.boost = BigValueDisplay(
-            pad, pad, self.w - pad * 2, row_h,
+            pad, pad, half_w, half_h,
             "BOOST", "kPa",
             warn_high=150, fmt="{:.0f}",
         )
         self.clt = BigValueDisplay(
-            pad, pad * 2 + row_h, self.w - pad * 2, row_h,
+            pad * 2 + half_w, pad, half_w, half_h,
             "COOLANT", "°C",
             warn_high=93, fmt="{:.0f}",
         )
+        self.oil_temp = BigValueDisplay(
+            pad, pad * 2 + half_h, half_w, half_h,
+            "OIL TEMP", "°C",
+            warn_high=120, fmt="{:.0f}",
+        )
         self.iat = BigValueDisplay(
-            pad, pad * 3 + row_h * 2, self.w - pad * 2, row_h,
+            pad * 2 + half_w, pad * 2 + half_h, half_w, half_h,
             "AIR INTAKE", "°C",
             warn_high=50, fmt="{:.0f}",
         )
@@ -253,10 +259,12 @@ class BoostTempsPage(Page):
     def render(self, data):
         boost = data.get("boost", max(0, data.get("map", 0) - data.get("baro", 101)))
         clt = data.get("clt", 0)
+        oil_temp = data.get("oiltemp", data.get("clt", 0) * 0.85)
         iat = data.get("iat", 0)
 
         self.boost.draw(self.screen, boost)
         self.clt.draw(self.screen, clt)
+        self.oil_temp.draw(self.screen, oil_temp)
         self.iat.draw(self.screen, iat)
 
 
