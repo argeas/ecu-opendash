@@ -271,9 +271,9 @@ class Dashboard:
         self._clock = pygame.time.Clock()
 
         self.pages = [
+            BoostTempsPage(screen),
             MainPage(screen),
             TempBoostPage(screen),
-            BoostTempsPage(screen),
         ]
         self.current_page = 0
 
