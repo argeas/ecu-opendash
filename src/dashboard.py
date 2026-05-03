@@ -3,6 +3,9 @@ import pygame
 from colors import *
 from gauges import VerticalGauge, RPMBar, GearIndicator, WarningBar
 
+# Needed for BigValueDisplay
+from colors import NEON_GREEN, PANEL_BG, BORDER, WHITE, TEXT_DIM, RED, ORANGE
+
 
 class Page:
     """Base class for a dashboard page."""
@@ -174,6 +177,89 @@ class TempBoostPage(Page):
         self.warnings.draw(self.screen, data)
 
 
+class BigValueDisplay:
+    """Large readable value with label, for focused pages."""
+
+    def __init__(self, x, y, w, h, label, unit="", warn_low=None, warn_high=None, fmt="{:.0f}"):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.label = label
+        self.unit = unit
+        self.warn_low = warn_low
+        self.warn_high = warn_high
+        self.fmt = fmt
+        self.value_font = pygame.font.SysFont("helvetica", max(36, h // 2), bold=True)
+        self.label_font = pygame.font.SysFont("helvetica", max(12, h // 6))
+        self.unit_font = pygame.font.SysFont("helvetica", max(10, h // 8))
+
+    def draw(self, surface, value):
+        in_warning = False
+        color = NEON_GREEN
+        if self.warn_high is not None and value >= self.warn_high:
+            color = RED
+            in_warning = True
+        elif self.warn_low is not None and value <= self.warn_low:
+            color = RED
+            in_warning = True
+        elif self.warn_high is not None and value >= self.warn_high * 0.85:
+            color = ORANGE
+
+        cx = self.x + self.w // 2
+        cy = self.y + self.h // 2
+
+        pygame.draw.rect(surface, PANEL_BG, (self.x, self.y, self.w, self.h))
+        pygame.draw.rect(surface, BORDER, (self.x, self.y, self.w, self.h), 1)
+
+        lt = self.label_font.render(self.label, True, WHITE)
+        lr = lt.get_rect(midtop=(cx, self.y + 6))
+        surface.blit(lt, lr)
+
+        vt = self.value_font.render(self.fmt.format(value), True, color)
+        vr = vt.get_rect(center=(cx, cy + 4))
+        surface.blit(vt, vr)
+
+        ut = self.unit_font.render(self.unit, True, TEXT_DIM)
+        ur = ut.get_rect(midbottom=(cx, self.y + self.h - 4))
+        surface.blit(ut, ur)
+
+
+class BoostTempsPage(Page):
+    """Page 3: Boost, Coolant Temp, IAT — large readable values."""
+
+    def __init__(self, screen):
+        super().__init__(screen, "FOCUS")
+
+        pad = 4
+        row_h = (self.h - pad * 4) // 3
+
+        self.boost = BigValueDisplay(
+            pad, pad, self.w - pad * 2, row_h,
+            "BOOST", "kPa",
+            warn_high=150, fmt="{:.0f}",
+        )
+        self.clt = BigValueDisplay(
+            pad, pad * 2 + row_h, self.w - pad * 2, row_h,
+            "COOLANT", "°C",
+            warn_high=93, fmt="{:.0f}",
+        )
+        self.iat = BigValueDisplay(
+            pad, pad * 3 + row_h * 2, self.w - pad * 2, row_h,
+            "AIR INTAKE", "°C",
+            warn_high=50, fmt="{:.0f}",
+        )
+
+    def render(self, data):
+        boost = data.get("boost", max(0, data.get("map", 0) - data.get("baro", 101)))
+        clt = data.get("clt", 0)
+        iat = data.get("iat", 0)
+
+        self.boost.draw(self.screen, boost)
+        self.clt.draw(self.screen, clt)
+        self.iat.draw(self.screen, iat)
+
+
 class Dashboard:
     """Multi-page dashboard. Click/tap to cycle pages."""
 
@@ -187,6 +273,7 @@ class Dashboard:
         self.pages = [
             MainPage(screen),
             TempBoostPage(screen),
+            BoostTempsPage(screen),
         ]
         self.current_page = 0
 
